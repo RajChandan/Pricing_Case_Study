@@ -3,7 +3,7 @@ from .models import PriceData
 
 class PriceDataSerializer(serializers.ModelSerializer):
     class Meta:
-        model : PriceData
-        fields : "__all__"
+        model = PriceData
+        fields = "__all__"
 
-        
+

@@ -2,6 +2,7 @@ from django.core.cache import cache
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.http import HttpResponse,JsonResponse
 from .models import PriceData,UploadedFile
@@ -15,55 +16,84 @@ import logging
 
 logger = logging.getLogger('django')
 
+import csv
+
+import csv
+
+def validate_csv(filename):
+    expected_headers = ['Store ID', 'SKU', 'Product Name', 'Price', 'Date']
+    with open(filename, mode='r', encoding='utf-8') as csv_file:
+        reader = csv.reader(csv_file)
+        headers = next(reader, None) 
+        print(headers)
+        print(headers == expected_headers)
+        return headers == expected_headers
+    
+
+
+
 @api_view(["POST"])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def upload_csv(request):
     try:
         file = request.FILES['file']
         uploaded_file = UploadedFile.objects.create(file=file)
         file_path = uploaded_file.file.path
         logger.info(f"File {file.name} uploaded by user {request.user}.")
+        if not file.name.endswith('.csv'):
+           return Response({"error": "Only CSV files are allowed"}, status=status.HTTP_400_BAD_REQUEST)
+        if not validate_csv(file_path):
+            logger.info(f"Invalid CSV : {file.name}.")
+            return Response({"error": "Invalid CSV : headers not matched"}, status=status.HTTP_400_BAD_REQUEST)
         process_csv_file.delay(file_path)
         logger.info(f"Processing started for file {file.name}.")
-        return JsonResponse({"message":"File is being processed."})
+        return Response({"message": "File is being processed"}, status=status.HTTP_200_OK)
     except Exception as e:
         print(e)
         logger.error(f"Error uploading file: {e}")
-        return JsonResponse({"error":"Failed to upload file"},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error":"Failed to upload file"},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
 @api_view(["GET"])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_records(request):
     try:
         logger.info("Getting all records")
         cache_key = f"search_results_{request.GET.urlencode()}"
         cached_data = cache.get(cache_key)
+        
         if cached_data:
-            logger.info("serving data from cache")
+            logger.info("Serving data from cache")
             return Response(cached_data)
-        queryset = PriceData.objects.all()
-        serializer = PriceDataSerializer(queryset,many=True)
+        
+        queryset = PriceData.objects.all().order_by('id')
 
-        cache.set(cache_key, serializer.data, timeout=300)
+        paginator = PageNumberPagination()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+
+        serializer = PriceDataSerializer(paginated_queryset, many=True)
+        response_data = paginator.get_paginated_response(serializer.data)
+
+
+        cache.set(cache_key, response_data.data, timeout=300)
         logger.info("Caching the search results.")
 
-        return Response(serializer.data)
-    except Exception as e:
-        logger.error(f"Error fetching record : {e}")
-        return Response({"error": "Failed to fetch record"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return response_data
 
+    except Exception as e:
+        logger.error(f"Error fetching records: {e}")
+        return Response({"error": "Failed to fetch records"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
 @api_view(["GET"])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def search_record(request):
     try:
-        store_id = request.GET.get('store_id')
-        sku = request.GET.get('sku')
-        name = request.GET.get('name')
+        store_id = request.GET.get('store_id','').strip()
+        sku = request.GET.get('sku','').strip()
+        name = request.GET.get('name','').strip()
 
         filters ={}
         logger.info(f"searching record .")
@@ -79,11 +109,13 @@ def search_record(request):
         print(store_id,sku,name)
 
         print(filters," -- filters")
+        if not filters:
+            return Response({"error":"No search_query found"},status=status.HTTP_404_NOT_FOUND)
         queryset = PriceData.objects.filter(**filters)
-
+    
         if not queryset.exists():
             logger.warning("Record not found.")
-            return JsonResponse({"error":"No match found"},status=status.HTTP_404_NOT_FOUND)
+            return Response({"error":"No match found"},status=status.HTTP_404_NOT_FOUND)
         serializer = PriceDataSerializer(queryset,many=True)
         return Response(serializer.data)
     except Exception as e:
@@ -93,7 +125,7 @@ def search_record(request):
 
 
 @api_view(["PUT"])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def edit_record(request,pk):
     try:
         record = PriceData.objects.get(pk=pk)
@@ -110,3 +142,4 @@ def edit_record(request,pk):
     except Exception as e:
         logger.error(f"Error updating record {pk}: {e}")
         return Response({"error": "Failed to update record"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

@@ -10,6 +10,8 @@ class PriceData(models.Model):
 
     def __str__(self):
         return f"{self.name} :: {self.store_id} :: {self.sku} :: {self.price} :: {self.date}"
+    class Meta:
+        ordering = ['id']
     
 
 class UploadedFile(models.Model):

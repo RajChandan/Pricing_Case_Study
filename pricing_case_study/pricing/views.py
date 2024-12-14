@@ -128,11 +128,17 @@ def search_record(request):
 @permission_classes([IsAuthenticated])
 def edit_record(request,pk):
     try:
+        print("editing record ...")
         record = PriceData.objects.get(pk=pk)
         serializer = PriceDataSerializer(record,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             logger.info(f"Record {pk} updated by user {request.user}.")
+            cache_key_prefix = "search_results_"
+            cache_keys = cache.keys(f"{cache_key_prefix}*")  # Fetch all keys matching the prefix
+            for key in cache_keys:
+                cache.delete(key)
+                logger.info(f"Cache invalidated for key: {key}")
             return Response(serializer.data)
         logger.warning(f"Validation errors while updating record {pk}.")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

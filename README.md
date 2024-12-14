@@ -2,7 +2,8 @@
 
 This project is a web-based solution to upload, search, and manage pricing records for retail stores. It consists of a React.js frontend and a Django REST API backend.
 
-#Project Overview
+# Project Overview
+
 The Pricing Management Dashboard allows users to:
 
 Upload large CSV files containing pricing data.

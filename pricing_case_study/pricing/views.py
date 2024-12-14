@@ -25,8 +25,6 @@ def validate_csv(filename):
     with open(filename, mode='r', encoding='utf-8') as csv_file:
         reader = csv.reader(csv_file)
         headers = next(reader, None) 
-        print(headers)
-        print(headers == expected_headers)
         return headers == expected_headers
     
 
@@ -49,7 +47,6 @@ def upload_csv(request):
         logger.info(f"Processing started for file {file.name}.")
         return Response({"message": "File is being processed"}, status=status.HTTP_200_OK)
     except Exception as e:
-        print(e)
         logger.error(f"Error uploading file: {e}")
         return Response({"error":"Failed to upload file"},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -106,9 +103,6 @@ def search_record(request):
         if name :
             filters["name__icontains"] =  name
         
-        print(store_id,sku,name)
-
-        print(filters," -- filters")
         if not filters:
             return Response({"error":"No search_query found"},status=status.HTTP_404_NOT_FOUND)
         queryset = PriceData.objects.filter(**filters)

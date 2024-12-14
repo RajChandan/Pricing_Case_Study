@@ -5,19 +5,19 @@ import RecordsList from "../components/recordsList";
 import EditRecord from "../components/editRecord";
 
 const Home = () => {
-  const [searchResults, setSearchResults] = useState([]); // Search results
-  const [refreshData, setRefreshData] = useState(false); // Trigger refresh
+  const [searchResults, setSearchResults] = useState([]);
+  const [refreshData, setRefreshData] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
 
   const handleSearchSuccess = (results) => {
     console.log("Received Search Results:", results);
-    setSearchResults(results); // Update the records list
+    setSearchResults(results);
   };
 
   const handleFileUpload = () => {
     alert("File uploaded successfully!");
-    setRefreshData(!refreshData); // Refresh table
-    setSearchResults([]); // Reset search results
+    setRefreshData(!refreshData);
+    setSearchResults([]);
   };
 
   const handleEdit = (record) => {
@@ -39,7 +39,7 @@ const Home = () => {
         </div>
         <div className="col-md-8">
           <RecordsList
-            records={searchResults} // Pass search results
+            records={searchResults}
             onEdit={handleEdit}
             refresh={refreshData}
           />

@@ -18,15 +18,14 @@ const SearchRecords = ({ onSearchSuccess }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Construct query string for GET request
       const query = new URLSearchParams(formData).toString();
       const response = await API.get(`/search/?${query}`);
       console.log("Search Response:", response.data);
-      onSearchSuccess(response.data); // Pass search results to parent
+      onSearchSuccess(response.data);
     } catch (error) {
       console.error("Error searching records:", error);
       alert("No records found or search failed.");
-      onSearchSuccess([]); // Pass an empty array if search fails
+      onSearchSuccess([]);
     } finally {
       setLoading(false);
     }

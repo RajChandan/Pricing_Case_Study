@@ -107,8 +107,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 2,
 }
 
-
-# JWT Token settings
 from datetime import timedelta
 
 SIMPLE_JWT = {
@@ -180,8 +178,8 @@ CACHES = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # React front-end
-    'http://127.0.0.1:3000',  # Localhost front-end
+    'http://localhost:3000',  
+    'http://127.0.0.1:3000',  
 ]
 
 

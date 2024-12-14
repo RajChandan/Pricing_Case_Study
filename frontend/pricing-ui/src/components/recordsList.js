@@ -25,9 +25,9 @@ const RecordsList = ({ records, onEdit, refresh }) => {
 
   useEffect(() => {
     if (records && records.length > 0) {
-      setAllRecords(records); // Display search results
+      setAllRecords(records);
     } else {
-      fetchRecords(page); // Default records
+      fetchRecords(page);
     }
   }, [records, refresh, page]);
 

@@ -14,10 +14,10 @@ const EditRecord = ({ record, onClose, onUpdate }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await API.put(`/records/${formData.id}/`, formData); // Update backend
+      await API.put(`/records/${formData.id}/`, formData);
       alert("Record updated successfully!");
-      onUpdate(); // Trigger refresh
-      onClose(); // Close the form
+      onUpdate();
+      onClose();
     } catch (error) {
       console.error("Error updating record:", error);
       alert("Failed to update record.");
